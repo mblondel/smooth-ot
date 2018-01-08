@@ -19,12 +19,71 @@ from .projection import projection_simplex
 class Regularization(object):
 
     def __init__(self, gamma=1.0):
+        """
+        Parameters
+        ----------
+        gamma: float
+            Regularization parameter.
+            We recover unregularized OT when gamma -> 0.
+        """
         self.gamma = gamma
 
     def delta_Omega(X):
+        """
+        Compute delta_Omega(X[:, j]) for each X[:, j].
+
+        delta_Omega(x) = sup_{y >= 0} y^T x - Omega(y).
+
+        Parameters
+        ----------
+        X: array, shape = len(a) x len(b)
+            Input array.
+
+        Returns
+        -------
+        v: array, len(b)
+            Values: v[j] = delta_Omega(X[:, j])
+
+        G: array, len(a) x len(b)
+            Gradients: G[:, j] = nabla delta_Omega(X[:, j])
+        """
         raise NotImplementedError
 
     def max_Omega(X, b):
+        """
+        Compute max_Omega_j(X[:, j]) for each X[:, j].
+
+        max_Omega_j(x) = sup_{y >= 0, sum(y) = 1} y^T x - Omega(b[j] y) / b[j].
+
+        Parameters
+        ----------
+        X: array, shape = len(a) x len(b)
+            Input array.
+
+        Returns
+        -------
+        v: array, len(b)
+            Values: v[j] = max_Omega_j(X[:, j])
+
+        G: array, len(a) x len(b)
+            Gradients: G[:, j] = nabla max_Omega_j(X[:, j])
+        """
+        raise NotImplementedError
+
+    def Omega(T):
+        """
+        Compute regularization term.
+
+        Parameters
+        ----------
+        T: array, shape = len(a) x len(b)
+            Input array.
+
+        Returns
+        -------
+        value: float
+            Regularization term.
+        """
         raise NotImplementedError
 
 
@@ -66,6 +125,36 @@ class SquaredL2(Regularization):
 
 
 def dual_obj_grad(alpha, beta, a, b, C, regul):
+    """
+    Compute objective value and gradients of dual objective.
+
+    Parameters
+    ----------
+    alpha: array, shape = len(a)
+    beta: array, shape = len(b)
+        Current iterate of dual potentials.
+
+    a: array, shape = len(a)
+    b: array, shape = len(b)
+        Input histograms (should be non-negative and sum to 1).
+
+    C: array, shape = len(a) x len(b)
+        Ground cost matrix.
+
+    regul: Regularization object
+        Should implement a delta_Omega(X) method.
+
+    Returns
+    -------
+    obj: float
+        Objective value (higher is better).
+
+    grad_alpha: array, shape = len(a)
+        Gradient w.r.t. alpha.
+
+    grad_beta: array, shape = len(b)
+        Gradient w.r.t. beta.
+    """
     obj = np.dot(alpha, a) + np.dot(beta, b)
     grad_alpha = a.copy()
     grad_beta = b.copy()
@@ -145,6 +234,32 @@ def solve_dual(a, b, C, regul, method="L-BFGS-B", tol=1e-3, max_iter=500):
 
 
 def semi_dual_obj_grad(alpha, a, b, C, regul):
+    """
+    Compute objective value and gradient of semi-dual objective.
+
+    Parameters
+    ----------
+    alpha: array, shape = len(a)
+        Current iterate of semi-dual potentials.
+
+    a: array, shape = len(a)
+    b: array, shape = len(b)
+        Input histograms (should be non-negative and sum to 1).
+
+    C: array, shape = len(a) x len(b)
+        Ground cost matrix.
+
+    regul: Regularization object
+        Should implement a max_Omega(X) method.
+
+    Returns
+    -------
+    obj: float
+        Objective value (higher is better).
+
+    grad: array, shape = len(a)
+        Gradient w.r.t. alpha.
+    """
     obj = np.dot(alpha, a)
     grad = a.copy()
 
@@ -175,7 +290,7 @@ def solve_semi_dual(a, b, C, regul, method="L-BFGS-B", tol=1e-3, max_iter=500):
         Ground cost matrix.
 
     regul: Regularization object
-        Should implement a delta_Omega(X) method.
+        Should implement a max_Omega(X) method.
 
     method: str
         Solver to be used (passed to `scipy.optimize.minimize`).
