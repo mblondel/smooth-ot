@@ -2,3 +2,5 @@
 build
 *.c
 *.so
+dist
+*.egg-info
