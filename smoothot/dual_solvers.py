@@ -24,12 +24,11 @@ class Regularization(object):
     def delta_Omega(X):
         raise NotImplementedError
 
-
     def max_Omega(X, b):
         raise NotImplementedError
 
 
-class Entropy(Regularization):
+class NegEntropy(Regularization):
 
     def delta_Omega(self, X):
         G = np.exp(X / self.gamma - 1)
@@ -43,6 +42,9 @@ class Entropy(Regularization):
         val -= self.gamma * np.log(b)
         G = exp_X / np.sum(exp_X, axis=0)
         return val, G
+
+    def Omega(self, T):
+        return self.gamma * np.sum(T * np.log(T))
 
 
 class SquaredL2(Regularization):
@@ -58,6 +60,9 @@ class SquaredL2(Regularization):
         val = np.sum(X * G, axis=0)
         val -= 0.5 * self.gamma * b * np.sum(G * G, axis=0)
         return val, G
+
+    def Omega(self, T):
+        return 0.5 * self.gamma * np.sum(T ** 2)
 
 
 def dual_obj_grad(alpha, beta, a, b, C, regul):
@@ -198,3 +203,55 @@ def solve_semi_dual(a, b, C, regul, method="L-BFGS-B", tol=1e-3, max_iter=500):
                    tol=tol, options=dict(maxiter=max_iter, disp=False))
 
     return res.x
+
+
+def get_plan_from_dual(alpha, beta, C, regul):
+    """
+    Retrieve optimal transportation plan from optimal dual potentials.
+
+    Parameters
+    ----------
+    alpha: array, shape = len(a)
+    beta: array, shape = len(b)
+        Optimal dual potentials.
+
+    C: array, shape = len(a) x len(b)
+        Ground cost matrix.
+
+    regul: Regularization object
+        Should implement a delta_Omega(X) method.
+
+    Returns
+    -------
+    T: array, shape = len(a) x len(b)
+        Optimal transportation plan.
+    """
+    X = alpha[:, np.newaxis] + beta - C
+    return regul.delta_Omega(X)[1]
+
+
+def get_plan_from_semi_dual(alpha, b, C, regul):
+    """
+    Retrieve optimal transportation plan from optimal semi-dual potentials.
+
+    Parameters
+    ----------
+    alpha: array, shape = len(a)
+        Optimal semi-dual potentials.
+
+    b: array, shape = len(b)
+        Second input histogram (should be non-negative and sum to 1).
+
+    C: array, shape = len(a) x len(b)
+        Ground cost matrix.
+
+    regul: Regularization object
+        Should implement a delta_Omega(X) method.
+
+    Returns
+    -------
+    T: array, shape = len(a) x len(b)
+        Optimal transportation plan.
+    """
+    X = alpha[:, np.newaxis] - C
+    return regul.max_Omega(X, b)[1] * b
