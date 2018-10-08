@@ -62,10 +62,10 @@ class Regularization(object):
 
         Returns
         -------
-        v: array, len(b)
+        v: array, shape = len(b)
             Values: v[j] = max_Omega_j(X[:, j])
 
-        G: array, len(a) x len(b)
+        G: array, shape = len(a) x len(b)
             Gradients: G[:, j] = nabla max_Omega_j(X[:, j])
         """
         raise NotImplementedError
@@ -88,6 +88,9 @@ class Regularization(object):
 
 
 class NegEntropy(Regularization):
+    """
+    Omega(x) = gamma * np.dot(x, log(x))
+    """
 
     def delta_Omega(self, X):
         G = np.exp(X / self.gamma - 1)
@@ -107,6 +110,9 @@ class NegEntropy(Regularization):
 
 
 class SquaredL2(Regularization):
+    """
+    Omega(x) = 0.5 * gamma * ||x||^2
+    """
 
     def delta_Omega(self, X):
         max_X = np.maximum(X, 0)
@@ -122,6 +128,80 @@ class SquaredL2(Regularization):
 
     def Omega(self, T):
         return 0.5 * self.gamma * np.sum(T ** 2)
+
+
+class GroupLasso(Regularization):
+    """
+    Omega(x[g]) = 0.5 * gamma * (1-rho) ||x[g]||^2 + gamma * rho * ||x[g]||
+    """
+
+    def __init__(self, groups, gamma=1.0, rho=0.2):
+        """
+        Parameters
+        ----------
+        groups: array, shape = n_groups x len(b)
+            Definition of non-overlapping groups. E.g.:
+
+            [[True True, False, False],
+             [False, False, True, False],
+             [False, False, False, True]]
+
+             defines three groups with len(b) = 4.
+
+        gamma: float
+            Regularization parameter.
+            We recover unregularized OT when gamma -> 0.
+
+        rho: float
+            Proportion of squared 2-norm and of 2-norm.
+        """
+        self.groups = groups
+        self.gamma = float(gamma)
+        self.rho = float(rho)
+
+    def _omega_g(self, t):
+        sq_norm2 = np.sum(t ** 2)
+        norm2 = np.sqrt(sq_norm2)
+        ret = 0.5 * (1 - self.rho) * sq_norm2
+        ret += self.rho * norm2
+        return self.gamma * ret
+
+    def Omega(self, T):
+        ret = 0
+        for j in range(T.shape[1]):
+            for g in self.groups:
+                ret += self._omega_g(T[:, j][g])
+        return ret
+
+    def _delta_omega(self, x):
+        gamma = self.gamma * (1 - self.rho)
+        mu = self.rho / (1 - self.rho)
+
+        grad = np.zeros_like(x)
+        val = 0
+
+        for g in self.groups:
+            x_g = x[g]
+            x_g_plus = np.maximum(x_g, 0) / gamma
+            norm2 = np.sqrt(np.sum(x_g_plus ** 2))
+
+            if norm2 > 0:
+                y_g = max(0, 1 - mu / norm2) * x_g_plus
+            else:
+                y_g = np.zeros_like(x_g_plus)
+
+            val += np.dot(y_g, x_g) - self._omega_g(y_g)
+            grad[g] = y_g
+
+        return val, grad
+
+    def delta_Omega(self, X):
+        v = np.zeros(X.shape[1], dtype=np.float64)
+        G = np.zeros(X.shape, dtype=np.float64)
+        # FIXME: vectorize this code.
+        for i in range(X.shape[1]):
+            v[i], G[:, i] = self._delta_omega(X[:, i])
+        return v, G
 
 
 def dual_obj_grad(alpha, beta, a, b, C, regul):

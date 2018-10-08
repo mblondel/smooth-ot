@@ -6,7 +6,7 @@ from sklearn.utils.testing import assert_almost_equal
 
 from smoothot.dual_solvers import solve_dual, solve_semi_dual
 from smoothot.dual_solvers import dual_obj_grad, semi_dual_obj_grad
-from smoothot.dual_solvers import NegEntropy, SquaredL2
+from smoothot.dual_solvers import NegEntropy, SquaredL2, GroupLasso
 from smoothot.dual_solvers import get_plan_from_dual, get_plan_from_semi_dual
 
 rng = np.random.RandomState(0)
@@ -38,3 +38,13 @@ def test_dual_and_semi_dual():
             T = get_plan_from_semi_dual(alpha, b, C, regul)
             val_primal = np.sum(T * C) + regul.Omega(T)
             assert_almost_equal(val_sd, val_primal, 1)
+
+
+def test_group_lasso_regul():
+    X = rng.rand(len(a), len(b))
+    groups = np.array([[1, 1, 1, 0, 0, 0, 0, 0],
+                       [0, 0, 0, 1, 1, 1, 0, 0],
+                       [0, 0, 0, 0, 0, 0, 1, 1]])
+    gl = GroupLasso(groups)
+    v, G = gl.delta_Omega(X)
+
