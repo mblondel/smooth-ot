@@ -4,3 +4,5 @@ build
 *.so
 dist
 *.egg-info
+images/
+res/
