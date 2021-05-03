@@ -1,3 +1,7 @@
+# Author: Mathieu Blondel
+#         Derek Lim
+# License: BSD 3 clause
+
 from matplotlib import image
 import numpy as np
 from sklearn.externals import joblib

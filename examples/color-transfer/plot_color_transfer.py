@@ -1,3 +1,8 @@
+# Author: Mathieu Blondel
+#         Derek Lim
+# License: BSD 3 clause
+
+
 import argparse
 import sys
 
