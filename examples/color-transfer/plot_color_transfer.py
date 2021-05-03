@@ -5,6 +5,7 @@
 
 import argparse
 import sys
+from pathlib import Path
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -16,6 +17,10 @@ import ot
 from smoothot.dual_solvers import solve_semi_dual, get_plan_from_semi_dual
 from smoothot.dual_solvers import NegEntropy, SquaredL2
 import dataset
+
+# make needed directories if they do not already exist
+Path('color-transfer/images').mkdir(exist_ok=True)
+Path('color-transfer/res').mkdir(exist_ok=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--n_colors', type=int, default=256, help='number of color clusters')
