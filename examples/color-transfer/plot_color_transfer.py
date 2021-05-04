@@ -6,6 +6,7 @@
 import argparse
 import sys
 from pathlib import Path
+import os
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -19,8 +20,9 @@ from smoothot.dual_solvers import NegEntropy, SquaredL2
 import dataset
 
 # make needed directories if they do not already exist
-Path('color-transfer/images').mkdir(exist_ok=True)
-Path('color-transfer/res').mkdir(exist_ok=True)
+root_dir = os.path.dirname(os.path.abspath(__file__))
+Path(os.path.join(root_dir, 'images')).mkdir(exist_ok=True)
+Path(os.path.join(root_dir, 'res')).mkdir(exist_ok=True)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--n_colors', type=int, default=256, help='number of color clusters')
@@ -118,12 +120,12 @@ ax.axis("off")
 plt.tight_layout()
 
 # plot original and transformed images
-out = "color-transfer/images/%s_%d_%s_%0.3e.jpg" % (method, n_colors, pair, gamma)
+out = "%s/images/%s_%d_%s_%0.3e.jpg" % (root_dir, method, n_colors, pair, gamma)
 plt.savefig(out)
 print()
 print('Saved image to:', out)
 
-out = "color-transfer/res/img_%s_%d_%s_%0.3e.pkl" % (method, n_colors, pair, gamma)
+out = "%s/res/img_%s_%d_%s_%0.3e.pkl" % (root_dir, method, n_colors, pair, gamma)
 tup = (img1_mapped.reshape(shape1), img2_mapped.reshape(shape2), sparsity)
 
 joblib.dump(tup, out)

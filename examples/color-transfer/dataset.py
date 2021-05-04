@@ -2,13 +2,16 @@
 #         Derek Lim
 # License: BSD 3 clause
 
+import os
+
 from matplotlib import image
 import numpy as np
 from sklearn.externals import joblib
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import KMeans
 
-DATAPATH = '../data'
+root_dir = os.path.dirname(os.path.abspath(__file__))
+DATAPATH = os.path.join(root_dir, '..', '..', 'data')
 
 def color_quantize(img, n_colors, name, method):
     """ cluster all colors of image """
@@ -29,7 +32,7 @@ def color_quantize(img, n_colors, name, method):
     else:
         raise ValueError("Invalid quantization method")
 
-    out = "color-transfer/res/%s_%s_%d_colors.pkl" % (name, method, n_colors)
+    out = "%s/res/%s_%s_%d_colors.pkl" % (root_dir, name, method, n_colors)
     joblib.dump((shape, centers, labels), out)
     print('Saving color quantization:', out)
 
@@ -43,21 +46,21 @@ def load_color_transfer(img1="comunion", img2="autumn", n_colors=256,
     # Load quantized images.
     try: # load if already saved
         shape1, centers1, labels1 = \
-            joblib.load("color-transfer/res/%s_%s_%d_colors.pkl" % (img1, method, n_colors))
+            joblib.load("%s/res/%s_%s_%d_colors.pkl" % (root_dir, img1, method, n_colors))
     except:
         img = image.imread('%s/%s.jpg' % (DATAPATH, img1)).astype(np.float64) / 256
         color_quantize(img, n_colors, img1, method=method)
         shape1, centers1, labels1 = \
-            joblib.load("color-transfer/res/%s_%s_%d_colors.pkl" % (img1, method, n_colors))
+            joblib.load("%s/res/%s_%s_%d_colors.pkl" % (root_dir, img1, method, n_colors))
 
     try: # load if already saved
         shape2, centers2, labels2 = \
-            joblib.load("color-transfer/res/%s_%s_%d_colors.pkl" % (img2, method, n_colors))
+            joblib.load("%s/res/%s_%s_%d_colors.pkl" % (root_dir, img2, method, n_colors))
     except:
         img = image.imread('%s/%s.jpg' % (DATAPATH, img2)).astype(np.float64) / 256
         color_quantize(img, n_colors, img2, method=method)
         shape2, centers2, labels2 = \
-            joblib.load("color-transfer/res/%s_%s_%d_colors.pkl" % (img2, method, n_colors))
+            joblib.load("%s/res/%s_%s_%d_colors.pkl" % (root_dir, img2, method, n_colors))
 
 
     m = centers1.shape[0]
