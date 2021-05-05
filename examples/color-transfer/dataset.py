@@ -6,7 +6,10 @@ import os
 
 from matplotlib import image
 import numpy as np
-from sklearn.externals import joblib
+try:
+    import joblib
+except ImportError:
+    from sklearn.externals import joblib
 from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import KMeans
 

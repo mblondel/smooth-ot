@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.utils.testing import assert_array_almost_equal
 
-from smoothot.projection import projection_simplex
+from smoothot.dual_solvers import projection_simplex
 
 
 def _projection_simplex(v, z=1):

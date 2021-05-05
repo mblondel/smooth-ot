@@ -12,7 +12,10 @@ import numpy as np
 import matplotlib.pylab as plt
 from matplotlib import patches as patches
 from sklearn.metrics.pairwise import euclidean_distances
-from sklearn.externals import joblib
+try:
+    import joblib
+except ImportError:
+    from sklearn.externals import joblib
 import ot
 
 from smoothot.dual_solvers import solve_semi_dual, get_plan_from_semi_dual
@@ -186,7 +189,8 @@ if n_colors <= 32:
                                linewidth=1.0, color=centers1)
     x_hist_axes.axis("off")
 
-    if method in ("l2_primal", "l2_sp"):
+    #if method in ("l2_primal", "l2_sp"):
+    if True:
         y_hist_axes = plt.subplot2grid((3, 3), (1, 2), rowspan=2,
                                    sharey=scatter_axes)
         bar_list = y_hist_axes.barh(np.arange(n), width=hist2,
